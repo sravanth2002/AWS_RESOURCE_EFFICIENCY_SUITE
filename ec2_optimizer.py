@@ -59,7 +59,7 @@ def run_ec2():
                 instance_id = instance['InstanceId']
                 cpu_util, network_in = get_metrics(instance_id, region)
                 
-                data.append([instance_id,region,cpu_util,network_in])
+                
                 
                 print(f"Instance ID: {instance_id}, Region: {region}")
                 print(f"  CPU Utilization: {cpu_util}%")
@@ -68,5 +68,19 @@ def run_ec2():
                 # Example condition to stop instance if CPU usage is low and network I/O is minimal
                 if cpu_util is not None and cpu_util < 10 and network_in is not None and network_in < 1000000:
                     print(f"  Stopping instance {instance_id} due to low usage.")
+                    
+                    data.append([instance_id,region,cpu_util,network_in])
+                    
                     # Uncomment below to stop the instance
-                    ec2.stop_instances(InstanceIds=[instance_id])
+                    # ec2.stop_instances(InstanceIds=[instance_id])
+    headers = ["Instance ID","Region","CPU Utilization (%)", "Network In (bytes)"]
+    table = f"{headers[0]:<20} | {headers[1]:<20} | {headers[2]:<20} | {headers[3]:<20}\n"
+    table += "-" * 80 + "\n"
+    for row in data:
+        table += f"{row[0]:<20} | {row[1]:<10} | {row[2]:<20.2f} | {row[3]:<20.2f}\n"
+    
+    print(table)
+    
+    with open('/tmp/details.log','a') as log_file:
+        log_file.write("\n\nEC2  Instances with low usage:\n")
+        log_file.write(table)
